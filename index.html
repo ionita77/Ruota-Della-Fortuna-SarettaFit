@@ -3,90 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Ruota della Fortuna</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f5f5f5;
   font-family: Arial, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #222;
-}
-
-.container {
-  width: 100%;
-  max-width: 500px;
+  background: #f5f5f5;
   text-align: center;
-  padding: 20px;
 }
 
 h1 {
-  margin: 0 0 8px;
-  font-size: 30px;
+  margin-top: 30px;
 }
 
 .giri {
   font-size: 18px;
-  margin-bottom: 20px;
+  margin: 10px 0 25px;
 }
 
-.ruota-container {
+.ruota-box {
   position: relative;
-  width: 90vw;
-  max-width: 420px;
-  aspect-ratio: 1;
+  width: 360px;
+  height: 360px;
+  max-width: 85vw;
+  max-height: 85vw;
   margin: auto;
 }
 
-canvas {
+.ruota {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  display: block;
+  border: 6px solid #111;
+  background: conic-gradient(
+    #ffd43b 0deg 45deg,
+    #ff6b6b 45deg 90deg,
+    #ffd43b 90deg 135deg,
+    #ff6b6b 135deg 180deg,
+    #ffd43b 180deg 225deg,
+    #ff6b6b 225deg 270deg,
+    #ffd43b 270deg 315deg,
+    #ff6b6b 315deg 360deg
+  );
+  position: relative;
   transition: transform 5s cubic-bezier(.12,.72,.18,1);
 }
 
+.premio {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 22px;
+}
+
+.p1 { transform: rotate(22.5deg) translateY(-125px); }
+.p2 { transform: rotate(67.5deg) translateY(-125px); }
+.p3 { transform: rotate(112.5deg) translateY(-125px); }
+.p4 { transform: rotate(157.5deg) translateY(-125px); }
+.p5 { transform: rotate(202.5deg) translateY(-125px); }
+.p6 { transform: rotate(247.5deg) translateY(-125px); }
+.p7 { transform: rotate(292.5deg) translateY(-125px); }
+.p8 { transform: rotate(337.5deg) translateY(-125px); }
+
 .freccia {
   position: absolute;
-  top: -5px;
+  top: -10px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 5;
   width: 0;
   height: 0;
   border-left: 20px solid transparent;
   border-right: 20px solid transparent;
-  border-top: 38px solid #111;
-  z-index: 5;
+  border-top: 40px solid #111;
 }
 
 button {
-  margin-top: 25px;
-  padding: 16px 40px;
-  border: none;
+  margin-top: 30px;
+  padding: 15px 40px;
+  border: 0;
   border-radius: 15px;
   background: #111;
   color: white;
-  font-size: 21px;
+  font-size: 20px;
   font-weight: bold;
-  cursor: pointer;
 }
 
-button:disabled {
-  opacity: 0.5;
-}
-
-#risultato {
+#result {
   margin-top: 20px;
-  min-height: 35px;
   font-size: 24px;
   font-weight: bold;
 }
@@ -95,29 +105,45 @@ button:disabled {
 
 <body>
 
-<div class="container">
-
 <h1>🎡 Ruota della Fortuna</h1>
 
 <div class="giri">
 Giri disponibili: <strong id="giri">3</strong>
 </div>
 
-<div class="ruota-container">
+<div class="ruota-box">
 
 <div class="freccia"></div>
 
-<canvas id="ruota" width="500" height="500"></canvas>
+<div class="ruota" id="ruota">
+
+<div class="premio p1">€5</div>
+<div class="premio p2">€10</div>
+<div class="premio p3">€20</div>
+<div class="premio p4">Riprova</div>
+<div class="premio p5">€5</div>
+<div class="premio p6">€50</div>
+<div class="premio p7">€10</div>
+<div class="premio p8">Riprova</div>
+
+</div>
 
 </div>
 
 <button id="gira">🎰 GIRA</button>
 
-<div id="risultato"></div>
-
-</div>
+<div id="result"></div>
 
 <script>
+
+const ruota = document.getElementById("ruota");
+const bottone = document.getElementById("gira");
+const giriText = document.getElementById("giri");
+const result = document.getElementById("result");
+
+let giri = 3;
+let rotazione = 0;
+let girando = false;
 
 const premi = [
   "€5",
@@ -130,99 +156,12 @@ const premi = [
   "Riprova"
 ];
 
-const canvas = document.getElementById("ruota");
-const ctx = canvas.getContext("2d");
+bottone.onclick = function() {
 
-const bottone = document.getElementById("gira");
-const risultato = document.getElementById("risultato");
-const giriText = document.getElementById("giri");
+  if (girando || giri <= 0) return;
 
-let giri = 3;
-let rotazione = 0;
-let staGirando = false;
-
-function disegnaRuota() {
-
-  const centro = 250;
-  const raggio = 240;
-  const fetta = (Math.PI * 2) / premi.length;
-
-  ctx.clearRect(0, 0, 500, 500);
-
-  for (let i = 0; i < premi.length; i++) {
-
-    const inizio = i * fetta;
-    const fine = inizio + fetta;
-
-    ctx.beginPath();
-    ctx.moveTo(centro, centro);
-    ctx.arc(
-      centro,
-      centro,
-      raggio,
-      inizio,
-      fine
-    );
-    ctx.closePath();
-
-    ctx.fillStyle =
-      i % 2 === 0
-      ? "#FFD43B"
-      : "#FF6B6B";
-
-    ctx.fill();
-
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    ctx.save();
-
-    ctx.translate(centro, centro);
-    ctx.rotate(inizio + fetta / 2);
-
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-
-    ctx.fillStyle = "#111";
-    ctx.font = "bold 25px Arial";
-
-    ctx.fillText(
-      premi[i],
-      raggio - 20,
-      0
-    );
-
-    ctx.restore();
-  }
-
-  ctx.beginPath();
-  ctx.arc(
-    centro,
-    centro,
-    45,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.fillStyle = "#111";
-  ctx.fill();
-
-}
-
-disegnaRuota();
-
-
-bottone.addEventListener("click", function() {
-
-  if (staGirando || giri <= 0) {
-    return;
-  }
-
-  staGirando = true;
+  girando = true;
   bottone.disabled = true;
-
-  risultato.textContent = "";
 
   giri--;
   giriText.textContent = giri;
@@ -230,32 +169,26 @@ bottone.addEventListener("click", function() {
   const vincitore =
     Math.floor(Math.random() * premi.length);
 
-  const gradiFetta =
-    360 / premi.length;
+  const fetta = 360 / premi.length;
 
-  const gradiFinali =
-    360 * 6 +
-    (360 - vincitore * gradiFetta - gradiFetta / 2);
+  rotazione += 2160 + (360 - vincitore * fetta - fetta / 2);
 
-  rotazione += gradiFinali;
-
-  canvas.style.transform =
+  ruota.style.transform =
     "rotate(" + rotazione + "deg)";
 
   setTimeout(function() {
 
-    risultato.textContent =
+    result.textContent =
       "🎉 Hai vinto: " + premi[vincitore];
 
-    staGirando = false;
+    girando = false;
 
     if (giri > 0) {
       bottone.disabled = false;
     }
 
   }, 5200);
-
-});
+};
 
 </script>
 
