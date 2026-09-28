@@ -136,42 +136,50 @@ Giri disponibili: <strong id="giri">3</strong>
 
 <script>
 
+let giri = 3;
+let rotazione = 0;
+let girando = false;
+
 const ruota = document.getElementById("ruota");
 const bottone = document.getElementById("gira");
 const giriText = document.getElementById("giri");
 const result = document.getElementById("result");
 
-let giri = 3;
-let rotazione = 0;
-let girando = false;
-
 const premi = [
-  "€5",
-  "€10",
-  "€20",
+  "Foto tette",
+  "Foto patatina",
+  "Dickrating vocale",
   "Riprova",
-  "€5",
-  "€50",
-  "€10",
+  "Video coppia",
+  "Video squirt",
+  "Sexchat",
   "Riprova"
 ];
 
-bottone.onclick = function() {
+bottone.addEventListener("click", function() {
 
-  if (girando || giri <= 0) return;
+  if (girando || giri <= 0) {
+    return;
+  }
 
   girando = true;
   bottone.disabled = true;
 
   giri--;
+
   giriText.textContent = giri;
 
-  const vincitore =
-    Math.floor(Math.random() * premi.length);
+  const vincitore = Math.floor(
+    Math.random() * premi.length
+  );
 
   const fetta = 360 / premi.length;
 
-  rotazione += 2160 + (360 - vincitore * fetta - fetta / 2);
+  const movimento =
+    2160 +
+    (360 - vincitore * fetta - fetta / 2);
+
+  rotazione += movimento;
 
   ruota.style.transform =
     "rotate(" + rotazione + "deg)";
@@ -188,7 +196,8 @@ bottone.onclick = function() {
     }
 
   }, 5200);
-};
+
+});
 
 </script>
 
