@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruota della Fortuna</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #222;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      padding: 25px 15px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .giri {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .wheel-box {
+      position: relative;
+      width: min(90vw, 420px);
+      height: min(90vw, 420px);
+      margin: auto;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      transition: transform 5s cubic-bezier(.12,.72,.18,1);
+    }
+
+    .pointer {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 35px solid #111;
+      z-index: 10;
+    }
+
+    button {
+      margin-top: 25px;
+      border: none;
+      border-radius: 15px;
+      padding: 16px 35px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #111;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 25px;
+      font-size: 24px;
+      font-weight: bold;
+      min-height: 35px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🎡 Ruota della Fortuna</h1>
+
+  <div class="giri">
+    Giri disponibili: <strong id="giri">3</strong>
+  </div>
+
+  <div class="wheel-box">
+    <div class="pointer"></div>
+    <canvas id="wheel" width="500" height="500"></canvas>
+  </div>
+
+  <button id="spinButton">🎰 GIRA</button>
+
+  <div id="result"></div>
+
+</div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+
+  const prizes = [
+    "€5",
+    "€10",
+    "€20",
+    "Riprova",
+    "€5",
+    "€50",
+    "€10",
+    "Riprova"
+  ];
+
+  const canvas = document.getElementById("wheel");
+  const ctx = canvas.getContext("2d");
+  const spinButton = document.getElementById("spinButton");
+  const result = document.getElementById("result");
+  const giriElement = document.getElementById("giri");
+
+  let giri = 3;
+  let currentRotation = 0;
+  let spinning = false;
+
+  function drawWheel() {
+    const center = 250;
+    const radius = 240;
+    const slice = (2 * Math.PI) / prizes.length;
+
+    ctx.clearRect(0, 0, 500, 500);
+
+    prizes.forEach((prize, i) => {
+      const start = i * slice;
+      const end = start + slice;
+
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, radius, start, end);
+      ctx.closePath();
+
+      ctx.fillStyle = i % 2 === 0 ? "#ffcc33" : "#ff6b6b";
+      ctx.fill();
+
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.save();
+
+      ctx.translate(center, center);
+      ctx.rotate(start + slice / 2);
+
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#111";
+      ctx.font = "bold 25px Arial";
+
+      ctx.fillText(prize, radius - 20, 8);
+
+      ctx.restore();
+    });
+
+    ctx.beginPath();
+    ctx.arc(center, center, 45, 0, Math.PI * 2);
+    ctx.fillStyle = "#111";
+    ctx.fill();
+  }
+
+  drawWheel();
+
+  spinButton.addEventListener("click", () => {
+
+    if (spinning || giri <= 0) return;
+
+    spinning = true;
+    spinButton.disabled = true;
+    result.textContent = "";
+
+    giri--;
+    giriElement.textContent = giri;
+
+    const winner = Math.floor(Math.random() * prizes.length);
+
+    const sliceDegrees = 360 / prizes.length;
+
+    const target =
+      360 * 6 +
+      (360 - winner * sliceDegrees - sliceDegrees / 2);
+
+    currentRotation += target;
+
+    canvas.style.transform =
+      rotate(${currentRotation}deg);
+
+    setTimeout(() => {
+
+      result.textContent =
+        "🎉 Hai vinto: " + prizes[winner];
+
+      spinning = false;
+
+      if (giri > 0) {
+        spinButton.disabled = false;
+      }
+
+    }, 5200);
+  });
+</script>
+
+</body>
+</html>
