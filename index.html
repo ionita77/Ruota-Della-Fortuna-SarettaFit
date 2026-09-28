@@ -1,150 +1,238 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ruota della Fortuna</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruota della Fortuna Saretta</title>
+    
+    <style>
+        body {
+            /* Sfondo scuro simile all'immagine */
+            background-color: #2b2b2b;
+            background-image: radial-gradient(#3c3c3c 1px, transparent 1px);
+            background-size: 15px 15px;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
 
-<style>
-body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  text-align: center;
-}
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-h1 {
-  margin-top: 30px;
-}
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: normal;
+        }
 
-.giri {
-  font-size: 18px;
-  margin: 10px 0 25px;
-}
+        .header h2 {
+            margin: 5px 0 0 0;
+            color: #888;
+            font-size: 28px;
+            font-weight: bold;
+        }
 
-.ruota-box {
-  position: relative;
-  width: 360px;
-  height: 360px;
-  max-width: 85vw;
-  max-height: 85vw;
-  margin: auto;
-}
+        .wheel-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+        }
 
-.ruota {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 6px solid #111;
-  background: conic-gradient(
-    #ffd43b 0deg 45deg,
-    #ff6b6b 45deg 90deg,
-    #ffd43b 90deg 135deg,
-    #ff6b6b 135deg 180deg,
-    #ffd43b 180deg 225deg,
-    #ff6b6b 225deg 270deg,
-    #ffd43b 270deg 315deg,
-    #ff6b6b 315deg 360deg
-  );
-  position: relative;
-  transition: transform 5s cubic-bezier(.12,.72,.18,1);
-}
+        /* Il Canvas che disegna fisicamente la ruota */
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* L'animazione fluida della rotazione */
+            transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            background-color: white; /* Bordo esterno bianco */
+            padding: 5px; 
+            box-sizing: border-box;
+        }
 
-.premio {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 22px;
-}
+        /* Il bottone centrale "Spin" */
+        .spin-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            background-color: #111;
+            color: white;
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 3px solid white;
+            user-select: none;
+        }
 
-.p1 { transform: rotate(22.5deg) translateY(-125px); }
-.p2 { transform: rotate(67.5deg) translateY(-125px); }
-.p3 { transform: rotate(112.5deg) translateY(-125px); }
-.p4 { transform: rotate(157.5deg) translateY(-125px); }
-.p5 { transform: rotate(202.5deg) translateY(-125px); }
-.p6 { transform: rotate(247.5deg) translateY(-125px); }
-.p7 { transform: rotate(292.5deg) translateY(-125px); }
-.p8 { transform: rotate(337.5deg) translateY(-125px); }
+        /* Il triangolino nero che fa da puntatore */
+        .spin-btn::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid white;
+            z-index: -1;
+        }
+        .spin-btn::after {
+            content: '';
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 11px solid transparent;
+            border-right: 11px solid transparent;
+            border-bottom: 20px solid #111;
+            z-index: -1;
+        }
 
-.freccia {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 40px solid #111;
-}
-
-button {
-  margin-top: 30px;
-  padding: 15px 40px;
-  border: 0;
-  border-radius: 15px;
-  background: #111;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-#result {
-  margin-top: 20px;
-  font-size: 24px;
-  font-weight: bold;
-}
-</style>
+        .spin-btn:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+    </style>
 </head>
-
 <body>
 
-<h1>🎡 Ruota della Fortuna</h1>
+    <div class="header">
+        <h1>Ruota della Fortuna Saretta</h1>
+        <h2>Spin the wheel</h2>
+    </div>
+    
+    <div class="wheel-container">
+        <!-- Bottone Centrale -->
+        <div class="spin-btn" id="spinBtn">Spin</div>
+        <!-- La ruota disegnata in JS -->
+        <canvas id="wheel" width="600" height="600"></canvas>
+    </div>
 
-<div class="giri">
-Giri disponibili: <strong id="giri">3</strong>
-</div>
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        
+        // I 8 spicchi base presi dall'immagine
+        const baseSlices = [
+            { text: "Sex chat fino 15", color: "#4DA6FF", textColor: "#fff" },     // Blu
+            { text: "Nulla", color: "#FFCC00", textColor: "#000" },                // Giallo
+            { text: "Foto patatina", color: "#FF6600", textColor: "#fff" },        // Arancione
+            { text: "Nulla", color: "#FF0066", textColor: "#fff" },                // Fucsia
+            { text: "Dickrating vocale", color: "#FFCC00", textColor: "#000" },    // Giallo
+            { text: "Video già pronto", color: "#FF6600", textColor: "#fff" },     // Arancione
+            { text: "Foto tette", color: "#FF0066", textColor: "#fff" },           // Fucsia
+            { text: "Video bolla perso", color: "#9933FF", textColor: "#fff" }     // Viola
+        ];
+        
+        // La ruota ha 16 spicchi in totale, quindi duplichiamo l'array
+        const slices = [...baseSlices, ...baseSlices];
+        const numSlices = slices.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        // Riduciamo leggermente il raggio per far vedere il bordo bianco
+        const radius = centerX - 5; 
 
-<div class="ruota-box">
+        // Funzione per disegnare la ruota
+        function drawWheel() {
+            for (let i = 0; i < numSlices; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+                
+                // 1. Disegna la fetta colorata
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = slices[i].color;
+                ctx.fill();
+                
+                // 2. Disegna il bordo tra gli spicchi
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#ffffff";
+                ctx.stroke();
 
-<div class="freccia"></div>
+                // 3. Aggiungi il testo
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                // Posiziona il testo a metà dell'angolo dello spicchio
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = slices[i].textColor;
+                ctx.font = "bold 24px Arial"; // Dimensione testo proporzionata al canvas
+                
+                // Sposta il testo verso il bordo esterno
+                ctx.fillText(slices[i].text, radius - 30, 0);
+                ctx.restore();
+            }
+        }
 
-<div class="ruota" id="ruota">
-  
-<div class="premio p1">Sex chat<br>15 min</div>
-<div class="premio p2">Nulla</div>
-<div class="premio p3">Video<br>già pronto</div>
-<div class="premio p4">Foto<br>patatina</div>
-<div class="premio p5">Video bolla<br>personalizzato</div>
-<div class="premio p6">Dickrating<br>vocale</div>
-<div class="premio p7">Nulla</div>
-<div class="premio p8">Foto<br>tette</div>
-<div class="premio p9">Video<br>già pronto</div>
-<div class="premio p10">Sex chat<br>15 min</div>
-<div class="premio p11">Foto<br>tette</div>
-<div class="premio p12">Nulla</div>
-<div class="premio p13">Video bolla<br>personalizzato</div>
-<div class="premio p14">Foto<br>patatina</div>
-<div class="premio p15">Dickrating<br>vocale</div>
-<div class="premio p16">Video<br>già pronto</div>
-  
-</div>
+        // Richiama la funzione all'avvio
+        drawWheel();
 
-</div>
+        let currentDegree = 0;
+        let isSpinning = false;
 
-<button id="gira">🎰 GIRA</button>
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
 
-<div id="result"></div>
+            // Giri completi (tra 8 e 12) + angolazione casuale
+            const randomDegree = Math.floor(Math.random() * 360) + (360 * 10); 
+            currentDegree += randomDegree;
 
-<script>
+            // Applica la rotazione
+            canvas.style.transform = rotate(${currentDegree}deg);
 
-</script>
-  
+            // Aspetta 4 secondi per la fine dell'animazione
+            setTimeout(() => {
+                isSpinning = false;
+
+                // Calcolo matematico per capire quale spicchio si trova sotto la freccia
+                // La freccia è fissa in alto (270 gradi nel Canvas)
+                const actualDegree = currentDegree % 360;
+                const pointerAngle = (270 - actualDegree + 360) % 360;
+                
+                // Troviamo l'indice dello spicchio
+                const winningIndex = Math.floor(pointerAngle / (360 / numSlices));
+                const prize = slices[winningIndex].text;
+
+                // Mostra il risultato a schermo (finché non colleghi il bot)
+                alert(Hai vinto: ${prize});
+                
+                /*
+                // QUANDO SARAI PRONTO A COLLEGARE IL BOT, USA QUESTO CODICE:
+                // Sostituisci l'alert() qua sopra con queste righe:
+                
+                const tg = window.Telegram.WebApp;
+                tg.sendData(prize); 
+                */
+                
+            }, 4000); 
+        });
+    </script>
 </body>
 </html>
