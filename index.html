@@ -10,7 +10,7 @@
 
     <style>
         body {
-            /* Sfondo scuro e griglia simile all'immagine originale */
+            /* Sfondo scuro con gradiente radiale simile all'immagine originale */
             background-color: #2b2b2b;
             background-image: radial-gradient(#3c3c3c 1px, transparent 1px);
             background-size: 15px 15px;
@@ -32,28 +32,21 @@
 
         .header h1 {
             margin: 0;
-            font-size: 22px;
-            font-weight: normal;
+            font-size: 26px;
+            font-weight: bold;
         }
 
         .header h2 {
             margin: 5px 0 0 0;
             color: #888;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        /* Testo informativo per il collegamento */
-        .info-link {
-            font-size: 14px;
-            color: #bbb;
-            margin-top: 5px;
+            font-size: 22px;
+            font-weight: normal;
         }
 
         .wheel-container {
             position: relative;
-            width: 350px;
-            height: 350px;
+            width: 380px;
+            height: 380px;
         }
 
         /* Il Canvas che disegna la ruota */
@@ -62,8 +55,8 @@
             height: 100%;
             border-radius: 50%;
             transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
-            /* Bordo esterno bianco per un look pulito */
+            box-shadow: 0 0 25px rgba(0,0,0,0.7);
+            /* Bordo esterno bianco per un look pulito e definito */
             background-color: white; 
             padding: 5px; 
             box-sizing: border-box;
@@ -75,8 +68,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             background-color: #111;
             color: white;
             border-radius: 50%;
@@ -84,12 +77,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 26px;
             font-weight: bold;
             cursor: pointer;
-            border: 3px solid white;
+            border: 4px solid white;
             user-select: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
 
         /* Il triangolino nero che fa da puntatore sopra il pulsante */
@@ -139,8 +132,6 @@
     <div class="header">
         <h1>Ruota della Fortuna Saretta</h1>
         <h2>Spin the wheel</h2>
-        <!-- Testo per ricordarti l'integrazione con Telegram -->
-        <p class="info-link">(Collega qui il tuo Bot Telegram Web App)</p>
     </div>
     
     <div class="wheel-container">
@@ -156,10 +147,13 @@
         tg.expand();
 
         const canvas = document.getElementById('wheel');
+        if (!canvas) {
+            console.error("Canvas non trovato!");
+        }
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         
-        // I 8 spicchi base da replicare
+        // I 8 spicchi base presi dall'immagine originale, replicati per fare 16
         const baseSlices = [
             { text: "Sex chat fino 15", color: "#4DA6FF", textColor: "#fff" }, // Blu
             { text: "Nulla", color: "#FFCC00", textColor: "#000" },            // Giallo
@@ -178,11 +172,12 @@
         
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        // Raggio leggermente ridotto per mostrare il bordo bianco
+        // Raggio leggermente ridotto per mostrare il bordo bianco definito
         const radius = centerX - 5; 
 
         // Funzione per disegnare la ruota sul canvas
         function drawWheel() {
+            console.log("Disegno la ruota...");
             // Pulisci il canvas prima di ridisegnare
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -210,11 +205,11 @@
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = slices[i].textColor;
-                // Carattere leggermente ridotto per evitare overflow
-                ctx.font = "bold 22px Arial"; 
+                // Carattere standard e dimensioni appropriate per evitare problemi
+                ctx.font = "bold 18px Arial, sans-serif"; 
                 
-                // Posiziona il testo vicino al bordo esterno
-                ctx.fillText(slices[i].text, radius - 30, 0);
+                // Posiziona il testo vicino al bordo esterno, con un offset
+                ctx.fillText(slices[i].text, radius - 40, 0);
                 ctx.restore();
             }
         }
@@ -231,18 +226,19 @@
             spinBtn.classList.add('disabled'); // Disabilita il pulsante visivamente
 
             // Giri completi casuali + offset per l'angolo finale
-            const randomDegree = Math.floor(Math.random() * 360) + (360 * 8); 
+            const randomDegree = Math.floor(Math.random() * 360) + (360 * 10); // Almeno 10 giri completi
             currentDegree += randomDegree;
 
             // Applica la rotazione visiva con CSS
-            canvas.style.transform = rotate(${currentDegree}deg);
-            
+            canvas.style.transform = `rotate(${currentDegree}deg)`;
+
             // Aspetta 4 secondi (tempo dell'animazione)
             setTimeout(() => {
                 isSpinning = false;
                 spinBtn.classList.remove('disabled');
 
                 // Calcola quale spicchio si trova sotto il puntatore fisso in alto
+                // Il puntatore è a 270 gradi nel sistema Canvas (top)
                 const actualDegree = currentDegree % 360;
                 const pointerAngle = (270 - actualDegree + 360) % 360;
                 
@@ -250,15 +246,19 @@
                 const winningIndex = Math.floor(pointerAngle / (360 / numSlices));
                 const prize = slices[winningIndex].text;
 
-                // Mostra il risultato a schermo come test
-                alert(Hai vinto: ${prize}! (TEST COMPLETATO));
+                // Mostra il risultato a schermo come test (importante per il feedback immediato)
+                alert(`Hai vinto: ${prize}! (TEST COMPLETATO)`);
                 
                 // Se il sito è aperto dentro Telegram Web App, invia il dato al bot
+                // tg.initDataUnsafe controlla se siamo all'interno di una Mini App Telegram
                 if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
+                    console.log("Invio i dati a Telegram: " + prize);
                     tg.sendData(prize); 
+                } else {
+                    console.log("Non sono in Telegram, mostro alert: " + prize);
                 }
                 
-            }, 4000); 
+            }, 4000); // Durata dell'animazione CSS
         });
     </script>
 </body>
