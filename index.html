@@ -47,11 +47,13 @@
             height: 380px;
         }
 
+        canvas 
         canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Usa ease-out per farla rallentare dolcemente senza tornare indietro */
+            transition: transform 6s ease-out; 
             box-shadow: 0 0 25px rgba(0,0,0,0.7);
             background-color: white; 
             padding: 5px; 
@@ -203,16 +205,14 @@
             const randomDegree = Math.floor(Math.random() * 360) + (360 * 10); 
             currentDegree += randomDegree;
 
+           // ... (resto del codice)
             canvas.style.transform = `rotate(${currentDegree}deg)`;
 
             setTimeout(() => {
                 spinBtn.innerText = "Fatto!"; 
 
                 const actualDegree = currentDegree % 360;
-                const pointerAngle = (270 - actualDegree + 360) % 360;
-                
-                const winningIndex = Math.floor(pointerAngle / (360 / numSlices));
-                const prize = slices[winningIndex].text;
+                // ... (calcolo del premio)
                 
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
@@ -220,7 +220,7 @@
                     tg.close();         
                 }
                 
-            }, 4000); 
+            }, 6000);
         });
     </script>
 </body>
