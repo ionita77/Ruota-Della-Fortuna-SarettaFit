@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruota della Fortuna Saretta</title>
     
-    <!-- Script ufficiale di Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
         body {
-            /* Sfondo scuro con gradiente radiale simile all'immagine originale */
             background-color: #2b2b2b;
             background-image: radial-gradient(#3c3c3c 1px, transparent 1px);
             background-size: 15px 15px;
@@ -49,20 +47,17 @@
             height: 380px;
         }
 
-        /* Il Canvas che disegna la ruota */
         canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 0 25px rgba(0,0,0,0.7);
-            /* Bordo esterno bianco per un look pulito e definito */
             background-color: white; 
             padding: 5px; 
             box-sizing: border-box;
         }
 
-        /* Il bottone centrale "Spin" */
         .spin-btn {
             position: absolute;
             top: 50%;
@@ -77,7 +72,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
             border: 4px solid white;
@@ -85,7 +80,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
 
-        /* Il triangolino nero che fa da puntatore sopra il pulsante */
         .spin-btn::before {
             content: '';
             position: absolute;
@@ -114,16 +108,15 @@
             z-index: -1;
         }
 
-        /* Feedback visivo quando si clicca */
         .spin-btn:active {
             transform: translate(-50%, -50%) scale(0.95);
         }
         
-        /* Cursore non disponibile durante la rotazione */
         .spin-btn.disabled {
             cursor: not-allowed;
             background-color: #555;
             color: #bbb;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -135,57 +128,44 @@
     </div>
     
     <div class="wheel-container">
-        <!-- Bottone Centrale -->
         <div class="spin-btn" id="spinBtn">Spin</div>
-        <!-- Il Canvas disegnato in JS -->
         <canvas id="wheel" width="600" height="600"></canvas>
     </div>
 
     <script>
-        // Inizializza Telegram Web App
         const tg = window.Telegram.WebApp;
         tg.expand();
 
         const canvas = document.getElementById('wheel');
-        if (!canvas) {
-            console.error("Canvas non trovato!");
-        }
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         
-        // I 8 spicchi base presi dall'immagine originale, replicati per fare 16
         const baseSlices = [
-            { text: "Sex chat fino 15", color: "#4DA6FF", textColor: "#fff" }, // Blu
-            { text: "Nulla", color: "#FFCC00", textColor: "#000" },            // Giallo
-            { text: "Foto patatina", color: "#FF6600", textColor: "#fff" },    // Arancione
-            { text: "Nulla", color: "#FF0066", textColor: "#fff" },            // Fucsia
-            { text: "Dickrating vocale", color: "#FFCC00", textColor: "#000" },// Giallo
-            { text: "Video già pronto", color: "#FF6600", textColor: "#fff" }, // Arancione
-            { text: "Foto tette", color: "#FF0066", textColor: "#fff" },       // Fucsia
-            { text: "Video bolla perso", color: "#9933FF", textColor: "#fff" }// Viola
+            { text: "Sex chat fino 15", color: "#4DA6FF", textColor: "#fff" }, 
+            { text: "Nulla", color: "#FFCC00", textColor: "#000" },            
+            { text: "Foto patatina", color: "#FF6600", textColor: "#fff" },    
+            { text: "Nulla", color: "#FF0066", textColor: "#fff" },            
+            { text: "Dickrating vocale", color: "#FFCC00", textColor: "#000" },
+            { text: "Video già pronto", color: "#FF6600", textColor: "#fff" }, 
+            { text: "Foto tette", color: "#FF0066", textColor: "#fff" },       
+            { text: "Video bolla perso", color: "#9933FF", textColor: "#fff" } 
         ];
         
-        // Creiamo la ruota completa a 16 spicchi
         const slices = [...baseSlices, ...baseSlices];
         const numSlices = slices.length;
         const sliceAngle = (2 * Math.PI) / numSlices;
         
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        // Raggio leggermente ridotto per mostrare il bordo bianco definito
         const radius = centerX - 5; 
 
-        // Funzione per disegnare la ruota sul canvas
         function drawWheel() {
-            console.log("Disegno la ruota...");
-            // Pulisci il canvas prima di ridisegnare
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             for (let i = 0; i < numSlices; i++) {
                 const startAngle = i * sliceAngle;
                 const endAngle = startAngle + sliceAngle;
                 
-                // 1. Disegna la fetta colorata
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
@@ -193,28 +173,23 @@
                 ctx.fillStyle = slices[i].color;
                 ctx.fill();
                 
-                // 2. Disegna il bordo tra gli spicchi
                 ctx.lineWidth = 1;
                 ctx.strokeStyle = "#ffffff";
                 ctx.stroke();
 
-                // 3. Aggiungi il testo, orientato verso l'esterno
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(startAngle + sliceAngle / 2);
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = slices[i].textColor;
-                // Carattere standard e dimensioni appropriate per evitare problemi
                 ctx.font = "bold 18px Arial, sans-serif"; 
                 
-                // Posiziona il testo vicino al bordo esterno, con un offset
                 ctx.fillText(slices[i].text, radius - 40, 0);
                 ctx.restore();
             }
         }
 
-        // Richiama la funzione all'avvio
         drawWheel();
 
         let currentDegree = 0;
@@ -225,15 +200,12 @@
             isSpinning = true;
             spinBtn.classList.add('disabled'); 
 
-            // Giri completi casuali + offset per l'angolo finale
             const randomDegree = Math.floor(Math.random() * 360) + (360 * 10); 
             currentDegree += randomDegree;
 
-            // Applica la rotazione visiva con CSS
             canvas.style.transform = `rotate(${currentDegree}deg)`;
 
             setTimeout(() => {
-                // NON rimettiamo isSpinning a false, così il tasto rimane bloccato per sempre
                 spinBtn.innerText = "Fatto!"; 
 
                 const actualDegree = currentDegree % 360;
@@ -241,15 +213,15 @@
                 
                 const winningIndex = Math.floor(pointerAngle / (360 / numSlices));
                 const prize = slices[winningIndex].text;
-
-                // Niente più alert. Inviamo i dati a Telegram e chiudiamo la pagina.
+                
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
-                    tg.sendData(prize); // Invia il premio al Bot Python
-                    tg.close();         // Chiude forzatamente l'app
+                    tg.sendData(prize); 
+                    tg.close();         
                 }
                 
             }, 4000); 
         });
-
-       
+    </script>
+</body>
+</html>
