@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruota della Fortuna Saretta</title>
     
+    <!-- Script ufficiale di Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         body {
-            /* Sfondo scuro simile all'immagine */
+            /* Sfondo scuro e griglia simile all'immagine originale */
             background-color: #2b2b2b;
             background-image: radial-gradient(#3c3c3c 1px, transparent 1px);
             background-size: 15px 15px;
@@ -24,7 +27,7 @@
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .header h1 {
@@ -40,21 +43,28 @@
             font-weight: bold;
         }
 
+        /* Testo informativo per il collegamento */
+        .info-link {
+            font-size: 14px;
+            color: #bbb;
+            margin-top: 5px;
+        }
+
         .wheel-container {
             position: relative;
             width: 350px;
             height: 350px;
         }
 
-        /* Il Canvas che disegna fisicamente la ruota */
+        /* Il Canvas che disegna la ruota */
         canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            /* L'animazione fluida della rotazione */
             transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            background-color: white; /* Bordo esterno bianco */
+            box-shadow: 0 0 20px rgba(0,0,0,0.6);
+            /* Bordo esterno bianco per un look pulito */
+            background-color: white; 
             padding: 5px; 
             box-sizing: border-box;
         }
@@ -79,9 +89,10 @@
             cursor: pointer;
             border: 3px solid white;
             user-select: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        /* Il triangolino nero che fa da puntatore */
+        /* Il triangolino nero che fa da puntatore sopra il pulsante */
         .spin-btn::before {
             content: '';
             position: absolute;
@@ -95,6 +106,7 @@
             border-bottom: 25px solid white;
             z-index: -1;
         }
+        
         .spin-btn::after {
             content: '';
             position: absolute;
@@ -109,8 +121,16 @@
             z-index: -1;
         }
 
+        /* Feedback visivo quando si clicca */
         .spin-btn:active {
             transform: translate(-50%, -50%) scale(0.95);
+        }
+        
+        /* Cursore non disponibile durante la rotazione */
+        .spin-btn.disabled {
+            cursor: not-allowed;
+            background-color: #555;
+            color: #bbb;
         }
     </style>
 </head>
@@ -119,44 +139,53 @@
     <div class="header">
         <h1>Ruota della Fortuna Saretta</h1>
         <h2>Spin the wheel</h2>
+        <!-- Testo per ricordarti l'integrazione con Telegram -->
+        <p class="info-link">(Collega qui il tuo Bot Telegram Web App)</p>
     </div>
     
     <div class="wheel-container">
         <!-- Bottone Centrale -->
         <div class="spin-btn" id="spinBtn">Spin</div>
-        <!-- La ruota disegnata in JS -->
+        <!-- Il Canvas disegnato in JS -->
         <canvas id="wheel" width="600" height="600"></canvas>
     </div>
 
     <script>
+        // Inizializza Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         
-        // I 8 spicchi base presi dall'immagine
+        // I 8 spicchi base da replicare
         const baseSlices = [
-            { text: "Sex chat fino 15", color: "#4DA6FF", textColor: "#fff" },     // Blu
-            { text: "Nulla", color: "#FFCC00", textColor: "#000" },                // Giallo
-            { text: "Foto patatina", color: "#FF6600", textColor: "#fff" },        // Arancione
-            { text: "Nulla", color: "#FF0066", textColor: "#fff" },                // Fucsia
-            { text: "Dickrating vocale", color: "#FFCC00", textColor: "#000" },    // Giallo
-            { text: "Video già pronto", color: "#FF6600", textColor: "#fff" },     // Arancione
-            { text: "Foto tette", color: "#FF0066", textColor: "#fff" },           // Fucsia
-            { text: "Video bolla perso", color: "#9933FF", textColor: "#fff" }     // Viola
+            { text: "Sex chat fino 15", color: "#4DA6FF", textColor: "#fff" }, // Blu
+            { text: "Nulla", color: "#FFCC00", textColor: "#000" },            // Giallo
+            { text: "Foto patatina", color: "#FF6600", textColor: "#fff" },    // Arancione
+            { text: "Nulla", color: "#FF0066", textColor: "#fff" },            // Fucsia
+            { text: "Dickrating vocale", color: "#FFCC00", textColor: "#000" },// Giallo
+            { text: "Video già pronto", color: "#FF6600", textColor: "#fff" }, // Arancione
+            { text: "Foto tette", color: "#FF0066", textColor: "#fff" },       // Fucsia
+            { text: "Video bolla perso", color: "#9933FF", textColor: "#fff" }// Viola
         ];
         
-        // La ruota ha 16 spicchi in totale, quindi duplichiamo l'array
+        // Creiamo la ruota completa a 16 spicchi
         const slices = [...baseSlices, ...baseSlices];
         const numSlices = slices.length;
         const sliceAngle = (2 * Math.PI) / numSlices;
         
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        // Riduciamo leggermente il raggio per far vedere il bordo bianco
+        // Raggio leggermente ridotto per mostrare il bordo bianco
         const radius = centerX - 5; 
 
-        // Funzione per disegnare la ruota
+        // Funzione per disegnare la ruota sul canvas
         function drawWheel() {
+            // Pulisci il canvas prima di ridisegnare
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
             for (let i = 0; i < numSlices; i++) {
                 const startAngle = i * sliceAngle;
                 const endAngle = startAngle + sliceAngle;
@@ -170,21 +199,21 @@
                 ctx.fill();
                 
                 // 2. Disegna il bordo tra gli spicchi
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1;
                 ctx.strokeStyle = "#ffffff";
                 ctx.stroke();
 
-                // 3. Aggiungi il testo
+                // 3. Aggiungi il testo, orientato verso l'esterno
                 ctx.save();
                 ctx.translate(centerX, centerY);
-                // Posiziona il testo a metà dell'angolo dello spicchio
                 ctx.rotate(startAngle + sliceAngle / 2);
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = slices[i].textColor;
-                ctx.font = "bold 24px Arial"; // Dimensione testo proporzionata al canvas
+                // Carattere leggermente ridotto per evitare overflow
+                ctx.font = "bold 22px Arial"; 
                 
-                // Sposta il testo verso il bordo esterno
+                // Posiziona il testo vicino al bordo esterno
                 ctx.fillText(slices[i].text, radius - 30, 0);
                 ctx.restore();
             }
@@ -199,37 +228,34 @@
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
+            spinBtn.classList.add('disabled'); // Disabilita il pulsante visivamente
 
-            // Giri completi (tra 8 e 12) + angolazione casuale
-            const randomDegree = Math.floor(Math.random() * 360) + (360 * 10); 
+            // Giri completi casuali + offset per l'angolo finale
+            const randomDegree = Math.floor(Math.random() * 360) + (360 * 8); 
             currentDegree += randomDegree;
 
-            // Applica la rotazione
+            // Applica la rotazione visiva con CSS
             canvas.style.transform = rotate(${currentDegree}deg);
-
-            // Aspetta 4 secondi per la fine dell'animazione
+            // Aspetta 4 secondi (tempo dell'animazione)
             setTimeout(() => {
                 isSpinning = false;
+                spinBtn.classList.remove('disabled');
 
-                // Calcolo matematico per capire quale spicchio si trova sotto la freccia
-                // La freccia è fissa in alto (270 gradi nel Canvas)
+                // Calcola quale spicchio si trova sotto il puntatore fisso in alto
                 const actualDegree = currentDegree % 360;
                 const pointerAngle = (270 - actualDegree + 360) % 360;
                 
-                // Troviamo l'indice dello spicchio
+                // Troviamo l'indice dello spicchio vincente
                 const winningIndex = Math.floor(pointerAngle / (360 / numSlices));
                 const prize = slices[winningIndex].text;
 
-                // Mostra il risultato a schermo (finché non colleghi il bot)
-                alert(Hai vinto: ${prize});
+                // Mostra il risultato a schermo come test
+                alert(Hai vinto: ${prize}! (TEST COMPLETATO));
                 
-                /*
-                // QUANDO SARAI PRONTO A COLLEGARE IL BOT, USA QUESTO CODICE:
-                // Sostituisci l'alert() qua sopra con queste righe:
-                
-                const tg = window.Telegram.WebApp;
-                tg.sendData(prize); 
-                */
+                // Se il sito è aperto dentro Telegram Web App, invia il dato al bot
+                if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
+                    tg.sendData(prize); 
+                }
                 
             }, 4000); 
         });
