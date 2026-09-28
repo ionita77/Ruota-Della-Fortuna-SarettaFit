@@ -1,224 +1,262 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ruota della Fortuna</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Ruota della Fortuna</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #222;
-    }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f5f5f5;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #222;
+}
 
-    .container {
-      width: 100%;
-      max-width: 500px;
-      padding: 25px 15px;
-      text-align: center;
-    }
+.container {
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  padding: 20px;
+}
 
-    h1 {
-      margin-bottom: 8px;
-    }
+h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
 
-    .giri {
-      margin-bottom: 20px;
-      font-size: 18px;
-    }
+.giri {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
 
-    .wheel-box {
-      position: relative;
-      width: min(90vw, 420px);
-      height: min(90vw, 420px);
-      margin: auto;
-    }
+.ruota-container {
+  position: relative;
+  width: 90vw;
+  max-width: 420px;
+  aspect-ratio: 1;
+  margin: auto;
+}
 
-    canvas {
-      width: 100%;
-      height: 100%;
-      transition: transform 5s cubic-bezier(.12,.72,.18,1);
-    }
+canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  transition: transform 5s cubic-bezier(.12,.72,.18,1);
+}
 
-    .pointer {
-      position: absolute;
-      top: -5px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 18px solid transparent;
-      border-right: 18px solid transparent;
-      border-top: 35px solid #111;
-      z-index: 10;
-    }
+.freccia {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 38px solid #111;
+  z-index: 5;
+}
 
-    button {
-      margin-top: 25px;
-      border: none;
-      border-radius: 15px;
-      padding: 16px 35px;
-      font-size: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      background: #111;
-      color: white;
-    }
+button {
+  margin-top: 25px;
+  padding: 16px 40px;
+  border: none;
+  border-radius: 15px;
+  background: #111;
+  color: white;
+  font-size: 21px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
+button:disabled {
+  opacity: 0.5;
+}
 
-    #result {
-      margin-top: 25px;
-      font-size: 24px;
-      font-weight: bold;
-      min-height: 35px;
-    }
-  </style>
+#risultato {
+  margin-top: 20px;
+  min-height: 35px;
+  font-size: 24px;
+  font-weight: bold;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <h1>🎡 Ruota della Fortuna</h1>
+<h1>🎡 Ruota della Fortuna</h1>
 
-  <div class="giri">
-    Giri disponibili: <strong id="giri">3</strong>
-  </div>
+<div class="giri">
+Giri disponibili: <strong id="giri">3</strong>
+</div>
 
-  <div class="wheel-box">
-    <div class="pointer"></div>
-    <canvas id="wheel" width="500" height="500"></canvas>
-  </div>
+<div class="ruota-container">
 
-  <button id="spinButton">🎰 GIRA</button>
+<div class="freccia"></div>
 
-  <div id="result"></div>
+<canvas id="ruota" width="500" height="500"></canvas>
+
+</div>
+
+<button id="gira">🎰 GIRA</button>
+
+<div id="risultato"></div>
 
 </div>
 
 <script>
-  const tg = window.Telegram.WebApp;
-  tg.expand();
 
-  const prizes = [
-    "€5",
-    "€10",
-    "€20",
-    "Riprova",
-    "€5",
-    "€50",
-    "€10",
-    "Riprova"
-  ];
+const premi = [
+  "€5",
+  "€10",
+  "€20",
+  "Riprova",
+  "€5",
+  "€50",
+  "€10",
+  "Riprova"
+];
 
-  const canvas = document.getElementById("wheel");
-  const ctx = canvas.getContext("2d");
-  const spinButton = document.getElementById("spinButton");
-  const result = document.getElementById("result");
-  const giriElement = document.getElementById("giri");
+const canvas = document.getElementById("ruota");
+const ctx = canvas.getContext("2d");
 
-  let giri = 3;
-  let currentRotation = 0;
-  let spinning = false;
+const bottone = document.getElementById("gira");
+const risultato = document.getElementById("risultato");
+const giriText = document.getElementById("giri");
 
-  function drawWheel() {
-    const center = 250;
-    const radius = 240;
-    const slice = (2 * Math.PI) / prizes.length;
+let giri = 3;
+let rotazione = 0;
+let staGirando = false;
 
-    ctx.clearRect(0, 0, 500, 500);
+function disegnaRuota() {
 
-    prizes.forEach((prize, i) => {
-      const start = i * slice;
-      const end = start + slice;
+  const centro = 250;
+  const raggio = 240;
+  const fetta = (Math.PI * 2) / premi.length;
 
-      ctx.beginPath();
-      ctx.moveTo(center, center);
-      ctx.arc(center, center, radius, start, end);
-      ctx.closePath();
+  ctx.clearRect(0, 0, 500, 500);
 
-      ctx.fillStyle = i % 2 === 0 ? "#ffcc33" : "#ff6b6b";
-      ctx.fill();
+  for (let i = 0; i < premi.length; i++) {
 
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      ctx.save();
-
-      ctx.translate(center, center);
-      ctx.rotate(start + slice / 2);
-
-      ctx.textAlign = "right";
-      ctx.fillStyle = "#111";
-      ctx.font = "bold 25px Arial";
-
-      ctx.fillText(prize, radius - 20, 8);
-
-      ctx.restore();
-    });
+    const inizio = i * fetta;
+    const fine = inizio + fetta;
 
     ctx.beginPath();
-    ctx.arc(center, center, 45, 0, Math.PI * 2);
-    ctx.fillStyle = "#111";
+    ctx.moveTo(centro, centro);
+    ctx.arc(
+      centro,
+      centro,
+      raggio,
+      inizio,
+      fine
+    );
+    ctx.closePath();
+
+    ctx.fillStyle =
+      i % 2 === 0
+      ? "#FFD43B"
+      : "#FF6B6B";
+
     ctx.fill();
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.save();
+
+    ctx.translate(centro, centro);
+    ctx.rotate(inizio + fetta / 2);
+
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    ctx.fillStyle = "#111";
+    ctx.font = "bold 25px Arial";
+
+    ctx.fillText(
+      premi[i],
+      raggio - 20,
+      0
+    );
+
+    ctx.restore();
   }
 
-  drawWheel();
+  ctx.beginPath();
+  ctx.arc(
+    centro,
+    centro,
+    45,
+    0,
+    Math.PI * 2
+  );
 
-  spinButton.addEventListener("click", () => {
+  ctx.fillStyle = "#111";
+  ctx.fill();
 
-    if (spinning || giri <= 0) return;
+}
 
-    spinning = true;
-    spinButton.disabled = true;
-    result.textContent = "";
+disegnaRuota();
 
-    giri--;
-    giriElement.textContent = giri;
 
-    const winner = Math.floor(Math.random() * prizes.length);
+bottone.addEventListener("click", function() {
 
-    const sliceDegrees = 360 / prizes.length;
+  if (staGirando || giri <= 0) {
+    return;
+  }
 
-    const target =
-      360 * 6 +
-      (360 - winner * sliceDegrees - sliceDegrees / 2);
+  staGirando = true;
+  bottone.disabled = true;
 
-    currentRotation += target;
+  risultato.textContent = "";
 
-    canvas.style.transform =
-      rotate(${currentRotation}deg);
+  giri--;
+  giriText.textContent = giri;
 
-    setTimeout(() => {
+  const vincitore =
+    Math.floor(Math.random() * premi.length);
 
-      result.textContent =
-        "🎉 Hai vinto: " + prizes[winner];
+  const gradiFetta =
+    360 / premi.length;
 
-      spinning = false;
+  const gradiFinali =
+    360 * 6 +
+    (360 - vincitore * gradiFetta - gradiFetta / 2);
 
-      if (giri > 0) {
-        spinButton.disabled = false;
-      }
+  rotazione += gradiFinali;
 
-    }, 5200);
-  });
+  canvas.style.transform =
+    "rotate(" + rotazione + "deg)";
+
+  setTimeout(function() {
+
+    risultato.textContent =
+      "🎉 Hai vinto: " + premi[vincitore];
+
+    staGirando = false;
+
+    if (giri > 0) {
+      bottone.disabled = false;
+    }
+
+  }, 5200);
+
+});
+
 </script>
 
 </body>
