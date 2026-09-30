@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ruota Base</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background-color: #2b2b2b; background-image: radial-gradient(#3c3c3c 1px, transparent 1px); background-size: 15px 15px; color: white; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
+        .header h2 { margin: 5px 0 0 0; color: #888; font-size: 20px; font-weight: normal; }
+        .wheel-container { position: relative; width: 90vw; max-width: 350px; height: 90vw; max-height: 350px; display: flex; align-items: center; justify-content: center; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 6s ease-out; box-shadow: 0 0 25px rgba(0,0,0,0.7); background-color: white; padding: 5px; box-sizing: border-box; }
+        .spin-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background-color: #111; color: white; border-radius: 50%; z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; cursor: pointer; border: 3px solid white; user-select: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .spin-btn::before { content: ''; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid white; z-index: -1; }
+        .spin-btn::after { content: ''; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 16px solid #111; z-index: -1; }
+        .spin-btn:active { transform: translate(-50%, -50%) scale(0.95); }
+        .spin-btn.disabled { cursor: not-allowed; background-color: #555; color: #bbb; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Ruota Base</h1>
+        <h2>Spin the wheel</h2>
+    </div>
+    <div class="wheel-container">
+        <div class="spin-btn" id="spinBtn">Spin</div>
+        <canvas id="wheel" width="600" height="600"></canvas>
+    </div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        
+        // Colori freschi e vivaci per la Ruota Base
+        const baseSlices = [
+            { text: "Nulla", color: "#FF6B6B", textColor: "#fff" }, 
+            { text: "Foto tette", color: "#4ECDC4", textColor: "#000" }, 
+            { text: "Foto culo", color: "#FFE66D", textColor: "#000" }, 
+            { text: "Video pronto", color: "#1A535C", textColor: "#fff" }, 
+            { text: "Dickrating vocale", color: "#FF9F1C", textColor: "#000" }, 
+            { text: "Vip 2 settimane", color: "#9B5DE5", textColor: "#fff" }, 
+            { text: "Hot Call 10 min", color: "#F15BB5", textColor: "#fff" }, 
+            { text: "Dickrating intimo", color: "#00BBF9", textColor: "#000" } 
+        ];
+        
+        const slices = [...baseSlices, ...baseSlices];
+        const numSlices = slices.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = centerX - 5; 
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < numSlices; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+                ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath(); ctx.fillStyle = slices[i].color; ctx.fill();
+                ctx.lineWidth = 1; ctx.strokeStyle = "#ffffff"; ctx.stroke();
+                ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = slices[i].textColor;
+                ctx.font = "bold 20px Arial, sans-serif"; ctx.fillText(slices[i].text, radius - 35, 0); ctx.restore();
+            }
+        }
+        drawWheel();
+
+        let currentDegree = 0;
+        let isSpinning = false;
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true; spinBtn.classList.add('disabled'); 
+            currentDegree += Math.floor(Math.random() * 360) + (360 * 10); 
+            canvas.style.transform = `rotate(${currentDegree}deg)`;
+            setTimeout(() => {
+                spinBtn.innerText = "Fatto!"; 
+                const actualDegree = currentDegree % 360;
+                const pointerAngle = (270 - actualDegree + 360) % 360;
+                const winningIndex = Math.floor(pointerAngle / (360 / numSlices));
+                const prize = slices[winningIndex].text;
+                
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    tg.sendData("base|" + prize); 
+                    tg.close();         
+                }
+            }, 6000); 
+        });
+    </script>
+</body>
+</html>
